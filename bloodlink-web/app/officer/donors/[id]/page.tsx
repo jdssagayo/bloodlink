@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useAuth } from "@/lib/useAuth";
 import { apiFetch } from "@/lib/api";
-import { ArrowLeft, Droplet, MapPin, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, Droplet } from "lucide-react";
 
 interface Donation {
   id: number;
@@ -24,95 +23,108 @@ interface DonorDetail {
   donationHistory: Donation[];
 }
 
+function initials(name: string) {
+  return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+}
+
 export default function DonorDetailPage() {
-  const { ready } = useAuth(["OFFICER", "ADMIN"]);
   const params = useParams();
   const [donor, setDonor] = useState<DonorDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!ready) return;
     apiFetch(`/officer/donors/${params.id}`)
       .then((data) => setDonor(data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [ready, params.id]);
+  }, [params.id]);
 
-  if (!ready || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400 text-sm">Loading...</p>
-      </div>
-    );
+  if (loading) {
+    return <div className="p-8 text-sm text-gray-400">Loading...</div>;
   }
 
   if (!donor) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-        <p className="text-neutral-400 text-sm">Donor not found.</p>
-      </div>
-    );
+    return <div className="p-8 text-sm text-gray-400">Donor not found.</div>;
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="bg-white border-b border-neutral-200 px-6 py-4 flex items-center gap-3">
-        <a href="/officer/donors" className="text-neutral-400 hover:text-neutral-700">
-          <ArrowLeft size={20} />
-        </a>
-        <h1 className="text-lg font-semibold text-neutral-800">Donor Details</h1>
-      </header>
+    <main className="p-8 max-w-3xl mx-auto">
+      <a href="/officer/donors" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 w-fit">
+        <ArrowLeft size={16} />
+        Back to Directory
+      </a>
 
-      <main className="max-w-md mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl border border-neutral-200 p-6 mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-neutral-800 text-lg">{donor.name}</h2>
-            <span
-              className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                donor.isAvailable ? "bg-green-50 text-green-700" : "bg-neutral-100 text-neutral-500"
-              }`}
-            >
-              {donor.isAvailable ? "Available" : "Not available"}
-            </span>
-          </div>
-          <p className="text-sm text-neutral-500 mb-4">{donor.email}</p>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-brand-50 rounded-xl p-3 text-center">
-              <Droplet className="mx-auto text-brand-600 mb-1" size={20} />
-              <p className="text-xs text-neutral-500">Blood Type</p>
-              <p className="font-semibold text-neutral-800 text-sm">{donor.bloodType.replace("_", " ")}</p>
+      {/* Profile card */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="flex justify-between items-start">
+          <div className="flex">
+            <div className="w-20 h-20 rounded-2xl bg-red-50 text-red-600 text-2xl font-medium flex items-center justify-center">
+              {initials(donor.name)}
             </div>
-            <div className="bg-brand-50 rounded-xl p-3 text-center">
-              <MapPin className="mx-auto text-brand-600 mb-1" size={20} />
-              <p className="text-xs text-neutral-500">Barangay</p>
-              <p className="font-semibold text-neutral-800 text-sm">{donor.barangay}</p>
-            </div>
-            <div className="bg-brand-50 rounded-xl p-3 text-center">
-              <Calendar className="mx-auto text-brand-600 mb-1" size={20} />
-              <p className="text-xs text-neutral-500">Last Donation</p>
-              <p className="font-semibold text-neutral-800 text-sm">{donor.lastDonationDate || "None"}</p>
+            <div className="ml-4 flex-1">
+              <h1 className="text-2xl font-semibold text-gray-900">{donor.name}</h1>
+              <p className="text-sm text-gray-500 mt-1">{donor.email}</p>
+              <div className="flex gap-2 mt-3">
+                <span className="bg-red-50 text-red-600 border border-red-100 rounded-full px-3 py-1 text-xs font-medium">
+                  {donor.bloodType.replace("_", " ")}
+                </span>
+                <span className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-xs flex items-center gap-1">
+                  <MapPin size={12} />
+                  {donor.barangay}
+                </span>
+              </div>
             </div>
           </div>
+
+          <span
+            className={`rounded-full px-3 py-1 text-sm flex items-center gap-2 ${
+              donor.isAvailable ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full ${donor.isAvailable ? "bg-green-600" : "bg-gray-500"}`} />
+            {donor.isAvailable ? "Available" : "Unavailable"}
+          </span>
         </div>
 
-        <h3 className="font-medium text-neutral-700 mb-2 text-sm">Donation History</h3>
-        {donor.donationHistory.length === 0 ? (
-          <p className="text-neutral-400 text-sm">No donations recorded.</p>
-        ) : (
-          <div className="space-y-3">
-            {donor.donationHistory.map((d) => (
-              <div key={d.id} className="bg-white rounded-xl border border-neutral-200 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-neutral-800">{d.location}</p>
-                  <p className="text-sm text-neutral-500">{d.donationDate}</p>
-                </div>
-                {d.notes && <p className="text-sm text-neutral-500 mt-1">{d.notes}</p>}
-              </div>
-            ))}
+        <div className="border-t border-gray-100 mt-6 pt-6 grid grid-cols-3 divide-x divide-gray-100 text-center">
+          <div>
+            <p className="text-3xl font-semibold text-red-600">{donor.donationHistory.length}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mt-1">Total Donations</p>
           </div>
+          <div>
+            <p className="text-lg font-medium text-gray-900">{donor.lastDonationDate || "—"}</p>
+            <p className="text-xs text-gray-400 mt-1">Last Donation</p>
+          </div>
+          <div>
+            <p className="text-lg font-medium text-gray-900">{donor.barangay}</p>
+            <p className="text-xs text-gray-400 mt-1">Barangay</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Donation history card */}
+      <div className="mt-6 bg-white rounded-2xl border border-gray-200 shadow-sm">
+        <h2 className="p-6 text-lg font-medium text-gray-900">Donation History</h2>
+
+        {donor.donationHistory.length === 0 ? (
+          <p className="px-6 pb-6 text-sm text-gray-400">No donations recorded yet.</p>
+        ) : (
+          donor.donationHistory.map((d) => (
+            <div key={d.id} className="border-t border-gray-100 p-6 flex items-start justify-between">
+              <div className="flex items-start flex-1">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                  <Droplet className="text-red-600" size={16} />
+                </div>
+                <div className="ml-4 flex-1">
+                  <p className="text-sm font-medium text-gray-900">{d.location}</p>
+                  {d.notes && <p className="text-sm text-gray-500 mt-1">{d.notes}</p>}
+                </div>
+              </div>
+              <span className="text-sm text-gray-400 shrink-0">{d.donationDate}</span>
+            </div>
+          ))
         )}
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

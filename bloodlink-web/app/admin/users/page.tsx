@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/useAuth";
 import { apiFetch } from "@/lib/api";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import SearchBar from "@/components/admin/SearchBar";
+import UserTable from "@/components/admin/UserTable";
+import AddUserModal from "@/components/admin/AddUserModal";
 
 interface UserSummary {
   id: number;
@@ -13,14 +14,14 @@ interface UserSummary {
   createdAt: string;
 }
 
-const ROLES = ["DONOR", "OFFICER", "ADMIN"];
-
 export default function AdminUsersPage() {
-  const { ready } = useAuth("ADMIN");
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
 
   function loadUsers() {
+    setLoading(true);
     apiFetch("/admin/users")
       .then((data) => setUsers(data))
       .catch(() => {})
@@ -28,9 +29,8 @@ export default function AdminUsersPage() {
   }
 
   useEffect(() => {
-    if (!ready) return;
     loadUsers();
-  }, [ready]);
+  }, []);
 
   async function handleRoleChange(id: number, newRole: string) {
     try {
@@ -54,53 +54,38 @@ export default function AdminUsersPage() {
     }
   }
 
-  if (!ready) return null;
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="bg-white border-b border-neutral-200 px-6 py-4 flex items-center gap-3">
-        <a href="/officer/dashboard" className="text-neutral-400 hover:text-neutral-700">
-          <ArrowLeft size={20} />
-        </a>
-        <h1 className="text-lg font-semibold text-neutral-800">User Management</h1>
-      </header>
+    <div>
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">User Management</h1>
+          <p className="text-sm text-gray-500">Manage all BloodLink accounts and permissions.</p>
+        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-lg px-4 py-2.5 transition-colors"
+        >
+          + Add User
+        </button>
+      </div>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        {loading ? (
-          <p className="text-neutral-400 text-sm text-center">Loading...</p>
-        ) : (
-          <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
-            {users.map((u) => (
-              <div
-                key={u.id}
-                className="flex items-center justify-between px-4 py-3 border-b last:border-b-0 border-neutral-100"
-              >
-                <div>
-                  <p className="font-medium text-neutral-800">{u.name}</p>
-                  <p className="text-sm text-neutral-500">{u.email}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={u.role}
-                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                    className="rounded-lg border border-neutral-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => handleDelete(u.id, u.name)}
-                    className="text-neutral-400 hover:text-red-600 transition-colors p-1.5"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
+      <SearchBar value={search} onChange={setSearch} />
+
+      {loading ? (
+        <p className="text-gray-400 text-sm text-center py-8">Loading...</p>
+      ) : (
+        <UserTable users={filteredUsers} onRoleChange={handleRoleChange} onDelete={handleDelete} />
+      )}
+
+      {showAddModal && (
+        <AddUserModal onClose={() => setShowAddModal(false)} onCreated={loadUsers} />
+      )}
     </div>
   );
 }

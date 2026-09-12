@@ -8,6 +8,9 @@ export function useAuth(requiredRole?: string | string[]) {
   const [ready, setReady] = useState(false);
   const [user, setUser] = useState<{ email: string; role: string } | null>(null);
 
+  // Convert to a stable string so the dependency array doesn't change every render
+  const roleKey = Array.isArray(requiredRole) ? requiredRole.join(",") : requiredRole || "";
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
@@ -18,8 +21,8 @@ export function useAuth(requiredRole?: string | string[]) {
       return;
     }
 
-    if (requiredRole) {
-      const allowedRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    if (roleKey) {
+      const allowedRoles = roleKey.split(",");
       if (!allowedRoles.includes(role)) {
         router.push("/login");
         return;
@@ -28,7 +31,7 @@ export function useAuth(requiredRole?: string | string[]) {
 
     setUser({ email, role });
     setReady(true);
-  }, [router, requiredRole]);
+  }, [router, roleKey]);
 
   function logout() {
     localStorage.removeItem("token");
