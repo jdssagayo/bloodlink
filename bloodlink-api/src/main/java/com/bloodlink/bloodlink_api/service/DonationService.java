@@ -9,6 +9,7 @@ import com.bloodlink.bloodlink_api.repository.DonationRepository;
 import com.bloodlink.bloodlink_api.repository.DonorProfileRepository;
 import com.bloodlink.bloodlink_api.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ public class DonationService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public DonationResponse logDonation(String userEmail, DonationRequest request) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -37,19 +39,15 @@ public class DonationService {
         DonorProfile profile = donorProfileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Donor profile not found. Please create one first."));
 
-        Donation donation = new Donation();
-        donation.setDonor(profile);
-        donation.setDonationDate(request.getDonationDate());
-        donation.setLocation(request.getLocation());
-        donation.setNotes(request.getNotes());
+        return processAndSaveDonation(profile, request);
+    }
 
-        Donation saved = donationRepository.save(donation);
+    @Transactional
+    public DonationResponse logDonationForDonor(Long donorProfileId, DonationRequest request) {
+        DonorProfile profile = donorProfileRepository.findById(donorProfileId)
+                .orElseThrow(() -> new IllegalArgumentException("Donor profile not found"));
 
-        // Update the donor's last donation date automatically
-        profile.setLastDonationDate(request.getDonationDate());
-        donorProfileRepository.save(profile);
-
-        return toResponse(saved);
+        return processAndSaveDonation(profile, request);
     }
 
     public List<DonationResponse> getOwnDonationHistory(String userEmail) {
@@ -63,6 +61,24 @@ public class DonationService {
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    private DonationResponse processAndSaveDonation(DonorProfile profile, DonationRequest request) {
+        Donation donation = new Donation();
+        donation.setDonor(profile);
+        donation.setDonationDate(request.getDonationDate());
+        donation.setLocation(request.getLocation());
+        donation.setNotes(request.getNotes());
+
+        Donation saved = donationRepository.save(donation);
+
+        // Only update the last donation date if this is a new, more recent donation
+        if (profile.getLastDonationDate() == null || request.getDonationDate().isAfter(profile.getLastDonationDate())) {
+            profile.setLastDonationDate(request.getDonationDate());
+            donorProfileRepository.save(profile);
+        }
+
+        return toResponse(saved);
     }
 
     private DonationResponse toResponse(Donation donation) {

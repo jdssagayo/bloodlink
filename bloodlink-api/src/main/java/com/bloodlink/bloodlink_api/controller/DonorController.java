@@ -4,7 +4,6 @@ import com.bloodlink.bloodlink_api.dto.AiQueryRequest;
 import com.bloodlink.bloodlink_api.dto.AiQueryResponse;
 import com.bloodlink.bloodlink_api.dto.DonorProfileRequest;
 import com.bloodlink.bloodlink_api.dto.DonorProfileResponse;
-import com.bloodlink.bloodlink_api.dto.DonationRequest;
 import com.bloodlink.bloodlink_api.dto.DonationResponse;
 import com.bloodlink.bloodlink_api.service.DonorProfileService;
 import com.bloodlink.bloodlink_api.service.DonationService;
@@ -58,16 +57,6 @@ public class DonorController {
     }
 
     @PreAuthorize("hasRole('DONOR')")
-    @PostMapping("/donations")
-    public ResponseEntity<DonationResponse> logDonation(
-            @Valid @RequestBody DonationRequest request,
-            Authentication authentication
-    ) {
-        String email = authentication.getName();
-        return ResponseEntity.ok(donationService.logDonation(email, request));
-    }
-
-    @PreAuthorize("hasRole('DONOR')")
     @GetMapping("/donations")
     public ResponseEntity<List<DonationResponse>> getOwnDonationHistory(Authentication authentication) {
         String email = authentication.getName();
@@ -92,5 +81,13 @@ public class DonorController {
         String answer = geminiService.askDonorQuestion(request.getQuestion(), ownProfile);
 
         return ResponseEntity.ok(new AiQueryResponse(answer));
+    }
+
+    @PreAuthorize("hasRole('DONOR')")
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteOwnAccount(Authentication authentication) {
+        String email = authentication.getName();
+        donorProfileService.deleteOwnAccount(email);
+        return ResponseEntity.noContent().build();
     }
 }

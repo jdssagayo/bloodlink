@@ -1,9 +1,11 @@
 package com.bloodlink.bloodlink_api.service;
 
+import com.bloodlink.bloodlink_api.dto.CreateUserRequest;
 import com.bloodlink.bloodlink_api.dto.UserSummaryResponse;
 import com.bloodlink.bloodlink_api.entity.User;
 import com.bloodlink.bloodlink_api.enums.Role;
 import com.bloodlink.bloodlink_api.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +15,26 @@ import java.util.stream.Collectors;
 public class AdminService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminService(UserRepository userRepository) {
+    public AdminService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public UserSummaryResponse createUser(CreateUserRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
+        User user = new User();
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(request.getRole());
+
+        User saved = userRepository.save(user);
+        return toResponse(saved);
     }
 
     public List<UserSummaryResponse> getAllUsers() {

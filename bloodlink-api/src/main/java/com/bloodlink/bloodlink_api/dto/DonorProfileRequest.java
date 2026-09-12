@@ -14,5 +14,7 @@ public class DonorProfileRequest {
     @NotBlank(message = "Barangay is required")
     private String barangay;
 
-    private Boolean isAvailable; // optional, defaults to true if not provided
+    private Boolean isAvailable;
+
+    private String phone; // optional
 }

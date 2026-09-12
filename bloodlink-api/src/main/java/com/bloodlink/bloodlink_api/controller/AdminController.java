@@ -1,5 +1,6 @@
 package com.bloodlink.bloodlink_api.controller;
 
+import com.bloodlink.bloodlink_api.dto.CreateUserRequest;
 import com.bloodlink.bloodlink_api.dto.UpdateRoleRequest;
 import com.bloodlink.bloodlink_api.dto.UserSummaryResponse;
 import com.bloodlink.bloodlink_api.service.AdminService;
@@ -29,8 +30,7 @@ public class AdminController {
     @PutMapping("/users/{id}/role")
     public ResponseEntity<UserSummaryResponse> updateUserRole(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateRoleRequest request
-    ) {
+            @Valid @RequestBody UpdateRoleRequest request) {
         return ResponseEntity.ok(adminService.updateUserRole(id, request.getRole()));
     }
 
@@ -38,5 +38,10 @@ public class AdminController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         adminService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<UserSummaryResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
+        return ResponseEntity.ok(adminService.createUser(request));
     }
 }

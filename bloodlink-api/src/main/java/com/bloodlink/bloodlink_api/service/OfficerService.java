@@ -57,6 +57,7 @@ public class OfficerService {
                 profile.getId(),
                 profile.getUser().getName(),
                 profile.getUser().getEmail(),
+                profile.getUser().getPhone(),
                 profile.getBloodType(),
                 profile.getBarangay(),
                 profile.getIsAvailable(),
