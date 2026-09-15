@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+@CrossOrigin // <-- Fixes frontend blocking
 @RestController
 @RequestMapping("/ai")
 public class AiController {
@@ -33,7 +34,7 @@ public class AiController {
         this.donorProfileRepository = donorProfileRepository;
     }
 
-    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN', 'DONOR')")
     @PostMapping("/ask")
     public ResponseEntity<?> askQuestion(
             @Valid @RequestBody AiQueryRequest request,
@@ -41,22 +42,20 @@ public class AiController {
     ) {
         String email = authentication.getName();
 
-        // Check rate limit before doing anything expensive
         if (!rateLimiterService.tryConsume(email)) {
             return ResponseEntity
                     .status(HttpStatus.TOO_MANY_REQUESTS)
                     .body("Rate limit reached. You can ask up to 20 questions per hour. Please try again later.");
         }
 
-        // Gather donor data as context (search all donors, no filters)
         List<DonorProfile> allDonors = donorProfileRepository.searchDonors(null, null, null);
 
-        // Convert to simple summary objects (avoid exposing sensitive fields like password)
+        // FIX: Added null checks here so the server doesn't crash!
         List<Object> donorSummaries = allDonors.stream()
         .map(d -> (Object) new DonorSummaryForAi(
-                d.getBloodType().name(),
-                d.getBarangay(),
-                d.getIsAvailable()
+                d.getBloodType() != null ? d.getBloodType().name() : "NOT_SET",
+                d.getBarangay() != null ? d.getBarangay() : "Unknown",
+                d.getIsAvailable() != null ? d.getIsAvailable() : false
         ))
         .collect(java.util.stream.Collectors.toList());
 

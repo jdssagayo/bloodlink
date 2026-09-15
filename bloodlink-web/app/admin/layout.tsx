@@ -2,7 +2,16 @@
 
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
-import { Users, Bell, LogOut, Droplet } from "lucide-react";
+import { 
+  Users, 
+  Bell, 
+  LogOut, 
+  Droplet, 
+  FileClock,
+  FileText, 
+  BarChart2, 
+  MessageSquare 
+} from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { ready, logout } = useAuth("ADMIN");
@@ -12,6 +21,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: "/admin/users", label: "User Management", icon: Users },
+    { href: "/admin/audit-logs", label: "Audit Logs", icon: FileClock },
+    { href: "/admin/reports", label: "Reports", icon: BarChart2 },
+    { href: "/admin/ai", label: "AI Assistant", icon: MessageSquare },
   ];
 
   return (

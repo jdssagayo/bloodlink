@@ -30,4 +30,8 @@ public class Donation {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    // CRITICAL UPDATE: Idagdag ito para ma-link ang donasyong ito sa Inventory system
+    @Column(name = "bag_id")
+    private String bagId;
 }

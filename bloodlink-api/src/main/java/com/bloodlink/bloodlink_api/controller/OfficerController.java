@@ -12,8 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/officer")
 public class OfficerController {
@@ -48,5 +51,46 @@ public class OfficerController {
             @PathVariable Long id,
             @Valid @RequestBody DonationRequest request) {
         return ResponseEntity.ok(donationService.logDonationForDonor(id, request));
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN')")
+    @PutMapping("/donors/{id}/blood-type")
+    public ResponseEntity<Void> updateDonorBloodType(
+            @PathVariable Long id,
+            @RequestBody Map<String, BloodType> request) {
+        officerService.updateDonorBloodType(id, request.get("bloodType"));
+        return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN')")
+    @PutMapping("/donors/{id}/birthdate")
+    public ResponseEntity<?> updateBirthdate(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        officerService.updateDonorBirthdate(id, LocalDate.parse(request.get("birthdate")));
+        return ResponseEntity.ok(Map.of("message", "Birthdate updated successfully"));
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN')")
+    @PutMapping("/donations/{donationId}")
+    public ResponseEntity<?> updateDonation(
+            @PathVariable Long donationId,
+            @Valid @RequestBody DonationRequest request) {
+
+        officerService.updateDonation(
+                donationId,
+                request.getDonationDate(),
+                request.getLocation(),
+                request.getNotes()
+        );
+
+        return ResponseEntity.ok(Map.of("message", "Donation updated successfully"));
+    }
+
+    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN')")
+    @DeleteMapping("/donations/{donationId}")
+    public ResponseEntity<?> deleteDonation(@PathVariable Long donationId) {
+        officerService.deleteDonation(donationId);
+        return ResponseEntity.ok(Map.of("message", "Donation deleted successfully"));
     }
 }

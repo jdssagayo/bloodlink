@@ -29,15 +29,10 @@ public class GeminiService {
         this.restTemplate = restTemplate;
     }
 
-    // For officers/admins asking about all donors
+    // --- OFFICER AI ---
+    // For officers asking about all donors
     public String askQuestion(String question, List<Object> donorData) {
         String prompt = buildPrompt(question, donorData);
-        return callGeminiApi(prompt);
-    }
-
-    // For donors asking about their own profile
-    public String askDonorQuestion(String question, Object ownDonorData) {
-        String prompt = buildDonorPrompt(question, ownDonorData);
         return callGeminiApi(prompt);
     }
 
@@ -52,6 +47,13 @@ public class GeminiService {
         sb.append("\n\nQuestion: ").append(question);
         sb.append("\n\nAnswer clearly and concisely based only on the data above.");
         return sb.toString();
+    }
+
+    // --- DONOR AI ---
+    // For donors asking about their own profile
+    public String askDonorQuestion(String question, Object ownDonorData) {
+        String prompt = buildDonorPrompt(question, ownDonorData);
+        return callGeminiApi(prompt);
     }
 
     private String buildDonorPrompt(String question, Object ownDonorData) {
@@ -69,6 +71,28 @@ public class GeminiService {
         return sb.toString();
     }
 
+    // --- ADMIN AI ---
+    // For admins asking about system reports and audit logs
+    public String askAdminQuestion(String question, Object reportData, Object logsData) {
+        String prompt = buildAdminPrompt(question, reportData, logsData);
+        return callGeminiApi(prompt);
+    }
+
+    private String buildAdminPrompt(String question, Object reportData, Object logsData) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("You are an AI assistant for the Admin of the BloodLink system in Baguio City. ");
+        sb.append("Your job is to analyze system reports, user statistics, and audit logs. ");
+        sb.append("Do NOT provide medical advice. Keep your answers concise, professional, and directly related to the data provided.\n\n");
+        sb.append("Here is the current system report data (JSON format):\n");
+        sb.append(reportData.toString());
+        sb.append("\n\nHere are the recent audit logs (JSON format):\n");
+        sb.append(logsData.toString());
+        sb.append("\n\nQuestion: ").append(question);
+        sb.append("\n\nAnswer clearly based only on the data above.");
+        return sb.toString();
+    }
+
+    // --- CORE API CALL ---
     private String callGeminiApi(String prompt) {
         ObjectNode requestBody = objectMapper.createObjectNode();
         ArrayNode contents = requestBody.putArray("contents");
@@ -91,7 +115,7 @@ public class GeminiService {
                     .path("content")
                     .path("parts").get(0)
                     .path("text")
-                    .asString();
+                    .asString(); // asText() is standard for JsonNode parsing to string
         } catch (Exception e) {
             return "Sorry, I couldn't process that request right now.";
         }

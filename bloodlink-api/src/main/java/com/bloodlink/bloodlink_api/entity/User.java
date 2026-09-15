@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,9 +39,13 @@ public class User {
     @Column
     private String phone;
 
+    @Column(name = "birthdate")
+    private LocalDate birthdate;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-
     }
+    @Column(name = "profile_picture")
+    private String profilePicture;
 }

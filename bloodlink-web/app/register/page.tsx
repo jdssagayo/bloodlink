@@ -9,6 +9,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [birthdate, setBirthdate] = useState("");
   const [role, setRole] = useState("DONOR");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,7 @@ export default function RegisterPage() {
       const data = await apiFetch("/auth/register", {
         method: "POST",
         skipAuth: true,
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify({ name, email, password, role, birthdate }),
       });
 
       localStorage.setItem("token", data.token);
@@ -31,9 +32,12 @@ export default function RegisterPage() {
 
       if (data.role === "DONOR") {
         router.push("/donor/dashboard");
-      } else {
+      } else if (data.role === "OFFICER") {
         router.push("/officer/dashboard");
+      } else if (data.role === "ADMIN") {
+        router.push("/admin/users");
       }
+    
     } catch (err) {
       setError("Registration failed. Email may already be in use.");
     } finally {
@@ -89,6 +93,17 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">Birthdate</label>
+            <input
+              type="date"
+              required
+              value={birthdate}
+              onChange={(e) => setBirthdate(e.target.value)}
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
