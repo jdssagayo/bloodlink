@@ -64,18 +64,27 @@ public class SecurityConfig {
         return source;
     }
 
-    @Bean
+   @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable()) // fine for stateless REST APIs using JWT
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll() // register/login are public
-                .anyRequest().authenticated() // everything else needs a valid token
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable()) // fine for stateless REST APIs using JWT
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/**").permitAll() // register/login are public
+                        
+                        // --- IDAGDAG ANG MGA ITO PARA SA API ---
+                        .requestMatchers("/api/inventory/**").hasAnyRole("OFFICER", "ADMIN")
+                        .requestMatchers("/api/donors/**").hasAnyRole("OFFICER", "ADMIN")
+                        // ----------------------------------------
+
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Protects all /admin/ endpoints
+                        .requestMatchers("/officer/**").hasAnyRole("ADMIN", "OFFICER") // Protects officer endpoints
+                        .requestMatchers("/donor/**").hasAnyRole("DONOR", "OFFICER", "ADMIN") // Protects donor
+                        .anyRequest().authenticated() // everything else needs a valid token
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

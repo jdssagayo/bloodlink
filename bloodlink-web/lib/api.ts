@@ -7,7 +7,10 @@ interface ApiFetchOptions extends RequestInit {
 export async function apiFetch(endpoint: string, options: ApiFetchOptions = {}) {
   const { skipAuth, ...fetchOptions } = options;
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  let token = null;
+  if (typeof window !== "undefined") {
+    token = localStorage.getItem("token") || localStorage.getItem("accessToken") || localStorage.getItem("jwt");
+  }
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -28,7 +31,14 @@ export async function apiFetch(endpoint: string, options: ApiFetchOptions = {}) 
     throw new Error(errorText || `Request failed with status ${res.status}`);
   }
 
-  // Handle empty responses (like DELETE requests returning 204)
   const text = await res.text();
-  return text ? JSON.parse(text) : null;
+  
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    // If Spring Boot sends a plain text string instead of JSON, return it safely without crashing!
+    return text; 
+  }
 }

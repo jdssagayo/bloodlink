@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+
+/* Idagdag ito para suportahan ang .dark class toggle */
+@custom-variant dark (&:where(.dark, .dark *));
 @theme {
   --color-brand-50: #FEF2F2;
   --color-brand-100: #FEE2E2;

@@ -1,3 +1,4 @@
+
 package com.bloodlink.bloodlink_api.dto;
 
 import com.bloodlink.bloodlink_api.enums.BloodType;
@@ -11,11 +12,17 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DonorProfileResponse {
+
     private Long id;
+    private String donorCode;
     private String name;
     private String email;
+    private String phone;
+    private LocalDate birthdate;
     private BloodType bloodType;
     private String barangay;
     private Boolean isAvailable;
     private LocalDate lastDonationDate;
+    private String profilePicture;
 }
+

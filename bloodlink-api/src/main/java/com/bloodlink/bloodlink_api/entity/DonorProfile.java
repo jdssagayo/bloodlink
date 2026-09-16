@@ -1,3 +1,4 @@
+
 package com.bloodlink.bloodlink_api.entity;
 
 import com.bloodlink.bloodlink_api.enums.BloodType;
@@ -23,8 +24,11 @@ public class DonorProfile {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Column(name = "donor_code", unique = true)
+    private String donorCode;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "blood_type", nullable = false)
+    @Column(name = "blood_type", nullable = true)
     private BloodType bloodType;
 
     @Column(nullable = false)
@@ -36,3 +40,4 @@ public class DonorProfile {
     @Column(name = "last_donation_date")
     private LocalDate lastDonationDate;
 }
+
