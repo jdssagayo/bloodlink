@@ -53,7 +53,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000" // Next.js dev server, add your deployed frontend URL later
+                "http://localhost:3000", // Next.js dev server
+                "https://bloodlink-3-iwku.onrender.com" // deployed frontend (Render)
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -72,7 +73,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // register/login are public
-                        
+
                         // --- IDAGDAG ANG MGA ITO PARA SA API ---
                         .requestMatchers("/api/inventory/**").hasAnyRole("OFFICER", "ADMIN")
                         .requestMatchers("/api/donors/**").hasAnyRole("OFFICER", "ADMIN")
