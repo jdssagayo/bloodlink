@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_BASE_URL = 'https://bloodlink-hull.onrender.com';
 
 interface ApiFetchOptions extends RequestInit {
   skipAuth?: boolean;
